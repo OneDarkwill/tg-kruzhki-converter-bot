@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: tg-kruzhki-converter-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: BOT_TOKEN
+        value: 8702729906:AAG-6EDd1Y1LddEgtMcducS_kznETVB2YeU
