@@ -258,8 +258,22 @@ async def handle_video(message: Message):
             logger.error(f"Ошибка при обработке видео: {e}", exc_info=True)
             await status_msg.edit_text("❌ Произошла ошибка при конвертации видео.")
 
+async def self_ping_task():
+    """Фоновый пинг раз в 10 минут, чтобы Render никогда не уходил в спящий режим"""
+    await asyncio.sleep(60)
+    url = os.getenv("RENDER_EXTERNAL_URL", "https://tg-kruzhki-converter-bot.onrender.com")
+    while True:
+        try:
+            import aiohttp
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=15)) as resp:
+                    logger.info(f"24/7 Keep-Alive пинг выполнен: {resp.status}")
+        except Exception as e:
+            logger.warning(f"Keep-Alive предупреждение: {e}")
+        await asyncio.sleep(600)
+
 async def start_web_server():
-    """Легковесный сервер на порту 7860 для Hugging Face Spaces"""
+    """Легковесный сервер на порту 7860/10000 для проверки здоровья сервиса"""
     async def ping_handler(request):
         return web.Response(text="Bot is running OK 24/7!", status=200)
 
@@ -275,8 +289,9 @@ async def main():
     bot_info = await bot.get_me()
     logger.info(f"Бот успешно запущен: @{bot_info.username} ({bot_info.first_name})")
     
-    # Запускаем фоновый веб-сервер для Hugging Face
+    # Запускаем фоновый веб-сервер и автопингер для работы 24/7
     await start_web_server()
+    asyncio.create_task(self_ping_task())
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
