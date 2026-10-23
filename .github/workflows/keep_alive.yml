@@ -1,0 +1,12 @@
+name: Keep Alive Render
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Service
+        run: curl -s -f -m 15 https://tg-kruzhki-converter-bot.onrender.com || true
